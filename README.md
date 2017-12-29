@@ -2,9 +2,9 @@
 
 ## 環境
 
-OS: Windows 10
-IDE: Dev C++
-Langage: C
+OS: Windows 10<br>
+IDE: Dev C++<br>
+Langage: C<br>
 
 ## 說明
 
@@ -16,6 +16,9 @@ Langage: C
 3. Semaphore
 
 三種 Race Condition 的解決方法<br>
+
+notUseShareMemory(Bad).c<br>
+因為誤解題目但覺得還有點用就留下來了<br>
 
 ## 作業題目
 
