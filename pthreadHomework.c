@@ -1,4 +1,4 @@
-#include <stdio.h>
+ï»¿#include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -6,30 +6,30 @@
 #include <time.h>
 #include <string.h>
 
-//¿é¤Jªº¼Æ¦r¶qªº¤j¤p 
+//è¼¸å…¥çš„æ•¸å­—é‡çš„å¤§å° 
 #define INPUTMAX 100000
 
-int inputData[INPUTMAX] = {0}; //Àx¦s¿é¤Jªº¼Æ¦r 
-int globalHistogram[10] = {0}; //Àx¦s¿é¥Xªºª½¤è¹Ïªø«× 
-int threadCount = 1; //threadªº¼Æ¶q 
-int flag = 0; //BusyWaitingºŞ²zcritical sectionªºÅÜ¼Æ 
-pthread_mutex_t mutex; //MutexºŞ²zcritical sectionªºÅÜ¼Æ  
-sem_t* semaphores; //SemaphoreºŞ²zcritical sectionªºÅÜ¼Æ  
+int inputData[INPUTMAX] = {0}; //å„²å­˜è¼¸å…¥çš„æ•¸å­— 
+int globalHistogram[10] = {0}; //å„²å­˜è¼¸å‡ºçš„ç›´æ–¹åœ–é•·åº¦ 
+int threadCount = 1; //threadçš„æ•¸é‡ 
+int flag = 0; //BusyWaitingç®¡ç†critical sectionçš„è®Šæ•¸ 
+pthread_mutex_t mutex; //Mutexç®¡ç†critical sectionçš„è®Šæ•¸  
+sem_t* semaphores; //Semaphoreç®¡ç†critical sectionçš„è®Šæ•¸  
 
 
-//³o¬O¨Ï¥Î BusyWaiting ªº Thread Function 
+//é€™æ˜¯ä½¿ç”¨ BusyWaiting çš„ Thread Function 
 void *BusyWaitingThread(void* input){
-	int* getData = (int*) input; //¨ú±o¶Ç¤Jªº¸ê®Æ 
-	int threadID = getData[0]; //threadªºID 
-	int dataSize = getData[1]; //thread­n³B²zªº¸ê®Æªø«× 
-	int dataHead = getData[2]; //thread­n³B²zªº¸ê®Æ¶}ÀY¦ì¸m 
-	int localHistogram[10] = {0}; //Àx¦slocalªºª½¤è¹Ïªø«× 
-	int currentData = 0; //·í«e³B¸Ìªº¸ê®Æ 
-	int section = 0; //³B¸Ìªº¸ê®ÆÄİ©ó­ş¤@­Ó°Ï°ì 
-	//¦L¥X thread ¶}©l°õ¦æ 
+	int* getData = (int*) input; //å–å¾—å‚³å…¥çš„è³‡æ–™ 
+	int threadID = getData[0]; //threadçš„ID 
+	int dataSize = getData[1]; //threadè¦è™•ç†çš„è³‡æ–™é•·åº¦ 
+	int dataHead = getData[2]; //threadè¦è™•ç†çš„è³‡æ–™é–‹é ­ä½ç½® 
+	int localHistogram[10] = {0}; //å„²å­˜localçš„ç›´æ–¹åœ–é•·åº¦ 
+	int currentData = 0; //ç•¶å‰è™•è£¡çš„è³‡æ–™ 
+	int section = 0; //è™•è£¡çš„è³‡æ–™å±¬æ–¼å“ªä¸€å€‹å€åŸŸ 
+	//å°å‡º thread é–‹å§‹åŸ·è¡Œ 
 	printf("Thread[%d] Strat. Size => %d\n", threadID, dataSize);	
 	
-	//±N³Q¤À°tµ¹³othreadªº¸ê®Æ²Î­p¨ìlocalªºª½¤è¹Ï 
+	//å°‡è¢«åˆ†é…çµ¦é€™threadçš„è³‡æ–™çµ±è¨ˆåˆ°localçš„ç›´æ–¹åœ– 
 	int dataPtr = 0;
 	for(dataPtr = 0; dataPtr < dataSize; dataPtr++){
 		currentData = inputData[dataHead + dataPtr];		
@@ -37,7 +37,7 @@ void *BusyWaitingThread(void* input){
 		localHistogram[section] += 1;
 	}
 	
-	//½Ğ¨D¥ş°ìÅÜ¼Æªº¦s¨úÅv­­ 
+	//è«‹æ±‚å…¨åŸŸè®Šæ•¸çš„å­˜å–æ¬Šé™ 
 	while(flag != threadID);
 	//===============critical section=====================	
 	for(dataPtr = 0; dataPtr < 10; dataPtr++){
@@ -49,19 +49,19 @@ void *BusyWaitingThread(void* input){
 	return NULL;
 }
 
-//³o¬O¨Ï¥Î Mutex ªº Thread Function
+//é€™æ˜¯ä½¿ç”¨ Mutex çš„ Thread Function
 void *MutexesThread(void* input){
-	int* getData = (int*) input; //¨ú±o¶Ç¤Jªº¸ê®Æ 
-	int threadID = getData[0]; //threadªºID 
-	int dataSize = getData[1]; //thread­n³B²zªº¸ê®Æªø«× 
-	int dataHead = getData[2]; //thread­n³B²zªº¸ê®Æ¶}ÀY¦ì¸m 
-	int localHistogram[10] = {0}; //Àx¦slocalªºª½¤è¹Ïªø«× 
-	int currentData = 0; //·í«e³B¸Ìªº¸ê®Æ 
-	int section = 0; //³B¸Ìªº¸ê®ÆÄİ©ó­ş¤@­Ó°Ï°ì 
-	//¦L¥X thread ¶}©l°õ¦æ 
+	int* getData = (int*) input; //å–å¾—å‚³å…¥çš„è³‡æ–™ 
+	int threadID = getData[0]; //threadçš„ID 
+	int dataSize = getData[1]; //threadè¦è™•ç†çš„è³‡æ–™é•·åº¦ 
+	int dataHead = getData[2]; //threadè¦è™•ç†çš„è³‡æ–™é–‹é ­ä½ç½® 
+	int localHistogram[10] = {0}; //å„²å­˜localçš„ç›´æ–¹åœ–é•·åº¦ 
+	int currentData = 0; //ç•¶å‰è™•è£¡çš„è³‡æ–™ 
+	int section = 0; //è™•è£¡çš„è³‡æ–™å±¬æ–¼å“ªä¸€å€‹å€åŸŸ 
+	//å°å‡º thread é–‹å§‹åŸ·è¡Œ 
 	printf("Thread[%d] Strat. Size => %d\n", threadID, dataSize);	
 	
-	//±N³Q¤À°tµ¹³othreadªº¸ê®Æ²Î­p¨ìlocalªºª½¤è¹Ï 
+	//å°‡è¢«åˆ†é…çµ¦é€™threadçš„è³‡æ–™çµ±è¨ˆåˆ°localçš„ç›´æ–¹åœ– 
 	int dataPtr = 0;
 	for(dataPtr = 0; dataPtr < dataSize; dataPtr++){
 		currentData = inputData[dataHead + dataPtr];		
@@ -69,7 +69,7 @@ void *MutexesThread(void* input){
 		localHistogram[section] += 1;
 	}
 	
-	//½Ğ¨D¥ş°ìÅÜ¼Æªº¦s¨úÅv­­ 
+	//è«‹æ±‚å…¨åŸŸè®Šæ•¸çš„å­˜å–æ¬Šé™ 
 	pthread_mutex_lock(&mutex);
 	//===============critical section=====================
 	for(dataPtr = 0; dataPtr < 10; dataPtr++){
@@ -81,19 +81,19 @@ void *MutexesThread(void* input){
 	return NULL;
 }
 
-//³o¬O¨Ï¥Î Semaphore ªº Thread Function
+//é€™æ˜¯ä½¿ç”¨ Semaphore çš„ Thread Function
 void *SemaphoreThread(void* input){
-	int* getData = (int*) input; //¨ú±o¶Ç¤Jªº¸ê®Æ 
-	int threadID = getData[0]; //threadªºID 
-	int dataSize = getData[1]; //thread­n³B²zªº¸ê®Æªø«× 
-	int dataHead = getData[2]; //thread­n³B²zªº¸ê®Æ¶}ÀY¦ì¸m 
-	int localHistogram[10] = {0}; //Àx¦slocalªºª½¤è¹Ïªø«× 
-	int currentData = 0; //·í«e³B¸Ìªº¸ê®Æ 
-	int section = 0; //³B¸Ìªº¸ê®ÆÄİ©ó­ş¤@­Ó°Ï°ì 
-	//¦L¥X thread ¶}©l°õ¦æ 
+	int* getData = (int*) input; //å–å¾—å‚³å…¥çš„è³‡æ–™ 
+	int threadID = getData[0]; //threadçš„ID 
+	int dataSize = getData[1]; //threadè¦è™•ç†çš„è³‡æ–™é•·åº¦ 
+	int dataHead = getData[2]; //threadè¦è™•ç†çš„è³‡æ–™é–‹é ­ä½ç½® 
+	int localHistogram[10] = {0}; //å„²å­˜localçš„ç›´æ–¹åœ–é•·åº¦ 
+	int currentData = 0; //ç•¶å‰è™•è£¡çš„è³‡æ–™ 
+	int section = 0; //è™•è£¡çš„è³‡æ–™å±¬æ–¼å“ªä¸€å€‹å€åŸŸ 
+	//å°å‡º thread é–‹å§‹åŸ·è¡Œ 
 	printf("Thread[%d] Strat. Size => %d\n", threadID, dataSize);	
 	
-	//±N³Q¤À°tµ¹³othreadªº¸ê®Æ²Î­p¨ìlocalªºª½¤è¹Ï 
+	//å°‡è¢«åˆ†é…çµ¦é€™threadçš„è³‡æ–™çµ±è¨ˆåˆ°localçš„ç›´æ–¹åœ– 
 	int dataPtr = 0;
 	for(dataPtr = 0; dataPtr < dataSize; dataPtr++){
 		currentData = inputData[dataHead + dataPtr];		
@@ -101,7 +101,7 @@ void *SemaphoreThread(void* input){
 		localHistogram[section] += 1;
 	}
 	
-	//½Ğ¨D¥ş°ìÅÜ¼Æªº¦s¨úÅv­­ 
+	//è«‹æ±‚å…¨åŸŸè®Šæ•¸çš„å­˜å–æ¬Šé™ 
 	sem_wait(&semaphores[threadID]);
 	//===============critical section=====================
 	for(dataPtr = 0; dataPtr < 10; dataPtr++){
@@ -115,40 +115,40 @@ void *SemaphoreThread(void* input){
 
 
 int main(int argc, char *argv[]) {	
-	int correctAns[10] = {0}; //³o¸Ì¬ö¿ı¥¿½Tµª®× 
-	pthread_t* thread_handles; //Thread±±¨î 
-	int thread, numIndex, histogramIndex; //for°j°éªºÅÜ¼Æ¦W 
+	int correctAns[10] = {0}; //é€™è£¡ç´€éŒ„æ­£ç¢ºç­”æ¡ˆ 
+	pthread_t* thread_handles; //Threadæ§åˆ¶ 
+	int thread, numIndex, histogramIndex; //forè¿´åœˆçš„è®Šæ•¸å 
 	
-	printf("Use threads: "); //¨M©w­n¨Ï¥Î´X­Óthread 
+	printf("Use threads: "); //æ±ºå®šè¦ä½¿ç”¨å¹¾å€‹thread 
 	scanf("%d", &threadCount);  
-	thread_handles = malloc(threadCount * sizeof(pthread_t)); //°t¸mthread°O¾ĞÅéªÅ¶¡ 
+	thread_handles = malloc(threadCount * sizeof(pthread_t)); //é…ç½®threadè¨˜æ†¶é«”ç©ºé–“ 
 	
-	semaphores = malloc(threadCount * sizeof(sem_t)); //°t¸msemaphores°O¾ĞÅéªÅ¶¡ 
+	semaphores = malloc(threadCount * sizeof(sem_t)); //é…ç½®semaphoresè¨˜æ†¶é«”ç©ºé–“ 
 	
-	//ªì©l¤Æsemaphores°Ñ¼Æ¡A¥uÅı¤@­Ó¬°1¨ä¥L¬°0 
+	//åˆå§‹åŒ–semaphoresåƒæ•¸ï¼Œåªè®“ä¸€å€‹ç‚º1å…¶ä»–ç‚º0 
 	sem_init(&semaphores[0], 0, 1);
 	for (thread = 1; thread < threadCount; thread++)
         sem_init(&semaphores[thread], 0, 0);
 	
-	//¶Ã¼Æ¥Í¦¨ 
+	//äº‚æ•¸ç”Ÿæˆ 
 	unsigned seed;
     seed = (unsigned)time(NULL); 
     srand(seed);
     
     for(numIndex = 0; numIndex < INPUTMAX; numIndex++){ 
         inputData[numIndex] = rand()%100;
-        correctAns[inputData[numIndex] / 10]++; //²Î­p¥¿½T¸Ñµª 
+        correctAns[inputData[numIndex] / 10]++; //çµ±è¨ˆæ­£ç¢ºè§£ç­” 
     } 
        
-    int averageData = INPUTMAX / threadCount; //­pºâ¨C­Óthreadªº¤u§@¶q 
+    int averageData = INPUTMAX / threadCount; //è¨ˆç®—æ¯å€‹threadçš„å·¥ä½œé‡ 
     
-    int sendDataStart = 0, sendDataEnd = -1; //¨C­Óthread¨ú¸ê®Æ¶}©l»Pµ²§ô½d³ò 
+    int sendDataStart = 0, sendDataEnd = -1; //æ¯å€‹threadå–è³‡æ–™é–‹å§‹èˆ‡çµæŸç¯„åœ 
     
     for(thread = 0; thread < threadCount; thread++){
-    	int* sendData; //­n¶Ç°eµ¹threadªº°T®§ 
-    	int pastDataCount = 0; //thread­n¤u§@ªº¸ê®Æ¼Æ¶q 
+    	int* sendData; //è¦å‚³é€çµ¦threadçš„è¨Šæ¯ 
+    	int pastDataCount = 0; //threadè¦å·¥ä½œçš„è³‡æ–™æ•¸é‡ 
     	
-    	//³]©wthread¨ú¸ê®Æ¶}©l»Pµ²§ôªº½d³ò 
+    	//è¨­å®šthreadå–è³‡æ–™é–‹å§‹èˆ‡çµæŸçš„ç¯„åœ 
     	sendDataStart = sendDataEnd + 1;
 		if(thread + 1 == threadCount){
     		sendDataEnd = INPUTMAX - 1;	
@@ -159,26 +159,26 @@ int main(int argc, char *argv[]) {
 		
 		pastDataCount = (sendDataEnd - sendDataStart + 1);
     	
-    	//°t¸msendData°O¾ĞÅé¡A¨Ã©ñ¤JthreadID¡B¤u§@¶q¤Î¤u§@¸ê®Æªº¶}©l¦ì¸m 
+    	//é…ç½®sendDataè¨˜æ†¶é«”ï¼Œä¸¦æ”¾å…¥threadIDã€å·¥ä½œé‡åŠå·¥ä½œè³‡æ–™çš„é–‹å§‹ä½ç½® 
 		sendData = malloc(3 * sizeof(int)); 	
     	sendData[0] = thread;
     	sendData[1] = pastDataCount;
     	sendData[2] = sendDataStart;
     	
-    	//«Ø¥ß¥H BusyWaiting¨Ó¹B§@ªºthread
+    	//å»ºç«‹ä»¥ BusyWaitingä¾†é‹ä½œçš„thread
 		//pthread_create(&thread_handles[thread], NULL, BusyWaitingThread, (void*) &sendData[0]);
-		//«Ø¥ß¥H Mutex¨Ó¹B§@ªºthread 
+		//å»ºç«‹ä»¥ Mutexä¾†é‹ä½œçš„thread 
 		pthread_create(&thread_handles[thread], NULL, MutexesThread, (void*) &sendData[0]); 
-		//«Ø¥ß¥H Semaphore¨Ó¹B§@ªºthread 
+		//å»ºç«‹ä»¥ Semaphoreä¾†é‹ä½œçš„thread 
 		//pthread_create(&thread_handles[thread], NULL, SemaphoreThread, (void*) &sendData[0]);
 	}
 	
-	//µ¥«İ©Ò¦³thread°õ¦æµ²§ô 
+	//ç­‰å¾…æ‰€æœ‰threadåŸ·è¡ŒçµæŸ 
 	for(thread = 0;  thread < threadCount; thread++){
 		pthread_join(thread_handles[thread], NULL);
 	}
 	
-	//¹ïµª®×¡A¬İthread¶]¥X¨Ó¬O¤£¬O¥¿½Tªº 
+	//å°ç­”æ¡ˆï¼Œçœ‹threadè·‘å‡ºä¾†æ˜¯ä¸æ˜¯æ­£ç¢ºçš„ 
 	printf("\n\n");
 	for(histogramIndex = 0; histogramIndex < 10; histogramIndex++){
 		printf("CORRECT  ANS: %d => %d\n", histogramIndex, correctAns[histogramIndex]);
@@ -186,7 +186,7 @@ int main(int argc, char *argv[]) {
 		printf("%s\n", correctAns[histogramIndex] == globalHistogram[histogramIndex] ? "correct" : "error");
 	}
 	
-	//ÄÀ©ñ°O¾ĞÅé 
+	//é‡‹æ”¾è¨˜æ†¶é«” 
 	free(thread_handles);
 	free(semaphores);
 	
