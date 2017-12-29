@@ -1,4 +1,4 @@
-# Pthread_HomeWork
+# pthread_Homework
 
 ## 環境
 
